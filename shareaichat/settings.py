@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from base.helpers import get_secret
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -98,6 +99,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -110,15 +113,19 @@ LOGIN_REDIRECT_URL = 'homepage'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": get_secret('POSTGRES_DB'),
+        "USER": get_secret('POSTGRES_USER'),
+        "PASSWORD": get_secret('POSTGRES_PASSWORD'),
+        "HOST": "db",
+        "PORT": "5432",
     }
 }
 
-SECRET_KEY = get_secret('DJANGO_SECRET_KEY')
-DEBUG = get_secret('DJANGO_DEBUG') == 'True'
-ALLOWED_HOSTS = get_secret('DJANGO_ALLOWED_HOSTS').split(',')
+SECRET_KEY = get_secret('SECRET_KEY')
+DEBUG = get_secret('DEBUG') == 'True'
+ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS').split(',')
 DEFAULT_FROM_EMAIL = get_secret('DEFAULT_FROM_EMAIL')
 EMAIL_BACKEND = get_secret('EMAIL_BACKEND')
 EMAIL_HOST = get_secret('EMAIL_HOST')
