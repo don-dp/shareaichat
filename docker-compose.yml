@@ -45,8 +45,9 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./${SHAREAICHAT_NGINX_CONFIG}:/etc/nginx/conf.d/default.conf:ro
+      - ./${SHAREAICHAT_NGINX_CONFIG}:/etc/nginx/conf.d/default.conf
       - static_volume:/static:ro
       - /home/sammy/certs:/etc/nginx/certs:ro
     depends_on:
