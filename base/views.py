@@ -9,6 +9,18 @@ from .forms import EmailUpdateForm
 from django.contrib.auth.views import LoginView, PasswordResetView
 from .helpers import check_turnstile
 
+def handler400(request, exception, template_name="base/error.html"):
+    return render(request, template_name, status=400)
+
+def handler403(request, exception, template_name="base/error.html"):
+    return render(request, template_name, status=403)
+
+def handler404(request, exception, template_name="base/error.html"):
+    return render(request, template_name, status=404)
+
+def handler500(request, template_name="base/error.html"):
+    return render(request, template_name, status=500)
+
 class HomePage(View):
     def get(self, request):
         return render(request, "base/homepage.html", {})

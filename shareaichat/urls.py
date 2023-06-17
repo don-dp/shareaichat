@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from base.forms import AuthAdminForm
+from django.conf.urls import handler400, handler403, handler404, handler500
+from base import views as base_views
 
 admin.site.login_form = AuthAdminForm
 admin.site.login_template = 'registration/login.html'
@@ -25,3 +27,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("base.urls")),
 ]
+
+handler400 = base_views.handler400
+handler403 = base_views.handler403
+handler404 = base_views.handler404
+handler500 = base_views.handler500
