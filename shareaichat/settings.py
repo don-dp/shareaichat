@@ -115,25 +115,25 @@ LOGIN_REDIRECT_URL = 'homepage'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": get_secret('POSTGRES_DB'),
-        "USER": get_secret('POSTGRES_USER'),
-        "PASSWORD": get_secret('POSTGRES_PASSWORD'),
+        "NAME": get_secret('SHAREAICHAT_POSTGRES_DB'),
+        "USER": get_secret('SHAREAICHAT_POSTGRES_USER'),
+        "PASSWORD": get_secret('SHAREAICHAT_POSTGRES_PASSWORD'),
         "HOST": "db",
         "PORT": "5432",
     }
 }
 
-SECRET_KEY = get_secret('SECRET_KEY')
-DEBUG = get_secret('DEBUG') == 'True'
-ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS').split(',')
-DEFAULT_FROM_EMAIL = get_secret('DEFAULT_FROM_EMAIL')
-EMAIL_BACKEND = get_secret('EMAIL_BACKEND')
-EMAIL_HOST = get_secret('EMAIL_HOST')
-EMAIL_PORT = int(get_secret('EMAIL_PORT'))
-EMAIL_USE_TLS = get_secret('EMAIL_USE_TLS') == 'True'
-EMAIL_HOST_USER = get_secret('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = get_secret('EMAIL_HOST_PASSWORD')
-TURNSTILE_SECRET_KEY = get_secret('TURNSTILE_SECRET_KEY')
+SECRET_KEY = get_secret('SHAREAICHAT_SECRET_KEY')
+DEBUG = get_secret('SHAREAICHAT_DEBUG') == 'True'
+ALLOWED_HOSTS = get_secret('SHAREAICHAT_ALLOWED_HOSTS').split(',')
+DEFAULT_FROM_EMAIL = get_secret('SHAREAICHAT_DEFAULT_FROM_EMAIL')
+EMAIL_BACKEND = get_secret('SHAREAICHAT_EMAIL_BACKEND')
+EMAIL_HOST = get_secret('SHAREAICHAT_EMAIL_HOST')
+EMAIL_PORT = int(get_secret('SHAREAICHAT_EMAIL_PORT'))
+EMAIL_USE_TLS = get_secret('SHAREAICHAT_EMAIL_USE_TLS') == 'True'
+EMAIL_HOST_USER = get_secret('SHAREAICHAT_EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_secret('SHAREAICHAT_EMAIL_HOST_PASSWORD')
+TURNSTILE_SECRET_KEY = get_secret('SHAREAICHAT_TURNSTILE_SECRET_KEY')
 
 if get_secret('SHAREAICHAT_ENV') == 'prod':
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
