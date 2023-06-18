@@ -26,6 +26,7 @@ admin.site.login_template = 'registration/login.html'
 urlpatterns = [
     path("obscure/", admin.site.urls),
     path("", include("base.urls")),
+    path("", include("main.urls")),
 ]
 
 handler400 = base_views.handler400

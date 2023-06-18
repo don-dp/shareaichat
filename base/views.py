@@ -22,10 +22,6 @@ def handler404(request, exception, template_name="base/error.html"):
 def handler500(request, template_name="base/error.html"):
     return render(request, template_name, status=500)
 
-class HomePage(View):
-    def get(self, request):
-        return render(request, "base/homepage.html", {})
-
 class AboutPage(View):
     def get(self, request):
         return render(request, "base/aboutpage.html", {})
