@@ -8,6 +8,7 @@ from django.urls import reverse_lazy
 from .forms import EmailUpdateForm
 from django.contrib.auth.views import LoginView, PasswordResetView
 from .helpers import check_turnstile
+from django import forms
 
 def handler400(request, exception, template_name="base/error.html"):
     return render(request, template_name, status=400)
@@ -48,6 +49,10 @@ class SignupView(View):
         
         form = UserCreationForm(request.POST)
         if form.is_valid():
+            username = form.cleaned_data['username']
+            if 'dinesh' in username.lower() or 'admin' in username.lower():
+                messages.error(request, "Username cannot contain 'dinesh' or 'admin'")
+                return redirect('signup')
             user = form.save()
             login(request, user)
             messages.info(request, 'Successfully registered. You can update your email in the profile page.')
