@@ -24,7 +24,7 @@ admin.site.login_form = AuthAdminForm
 admin.site.login_template = 'registration/login.html'
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("obscure/", admin.site.urls),
     path("", include("base.urls")),
 ]
 
