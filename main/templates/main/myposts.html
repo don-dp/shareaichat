@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+
+{% block title %}My posts | Share AI Chat{% endblock %}
+
+{% block content %}
+<p><b>My Posts</b></p>
+
+{% for post in my_posts %}
+    <div class="post">
+        <a href="{% url 'post_detail' post.id %}">{{ post.title }}</a>
+        <p>
+            <span id="points-{{ post.id }}">{{ post.votes }}</span> 
+            <span id="points-string-{{ post.id }}">point{{ post.votes|pluralize }}</span> 
+            by {{ post.user.username }} | Created at: {{ post.created_at }}
+        </p>
+        <hr>
+    </div>
+{% empty %}
+    <p>You have not made any posts yet.</p>
+{% endfor %}
+
+{% if my_posts %}
+<div style="text-align: center;">
+    {% if my_posts.has_previous %}
+        <a href="?page={{ my_posts.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    Page {{ my_posts.number }} of {{ my_posts.paginator.num_pages }}
+
+    {% if my_posts.has_next %}
+        <a href="?page={{ my_posts.next_page_number }}">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

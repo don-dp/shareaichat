@@ -1,0 +1,23 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ post.title }} | Share AI Chat{% endblock %}
+
+{% block content %}
+<span id="user-authenticated" data-user-authenticated="{{ user.is_authenticated }}"></span>
+<a class="vote-button" id="post-{{ post.id }}" data-post-id="{{ post.id }}" style="text-decoration: none;">
+    {% if is_upvoted %}
+        {% include 'main/upvote-fill.html' %}
+    {% else %}
+        {% include 'main/upvote.html' %}
+    {% endif %}
+</a>
+<b>{{ post.title }}</b>
+<p>
+    <span id="points-{{ post.id }}">{{ post.votes }}</span>
+    <span id="points-string-{{ post.id }}">point{{ post.votes|pluralize }}</span>
+    by {{ post.user.username }} | Created at: {{ post.created_at }}
+</p>
+<hr>
+<div>{{ post.content|linebreaks }}</div>
+{% include 'main/postvotingscript.html' %}
+{% endblock %}
