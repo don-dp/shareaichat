@@ -11,7 +11,7 @@
         <p>
             <span id="points-{{ post.id }}">{{ post.votes }}</span> 
             <span id="points-string-{{ post.id }}">point{{ post.votes|pluralize }}</span> 
-            by {{ post.user.username }} | Created at: {{ post.created_at }}
+            by {{ post.user.username }} | {{ post.comment_count }} comment{{ post.comment_count|pluralize }} | Created at: {{ post.created_at }}
         </p>
         <hr>
     </div>

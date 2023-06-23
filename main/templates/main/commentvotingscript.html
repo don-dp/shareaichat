@@ -1,0 +1,56 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const voteButtons = document.querySelectorAll('.comment-vote-button');
+    const userIsAuthenticated = document.querySelector("#user-authenticated").dataset.userAuthenticated === 'True';
+
+    voteButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+
+            if (!userIsAuthenticated) {
+                console.log('User is not authenticated.');
+                return;
+            }
+
+            const commentId = this.dataset.commentId;
+            const csrftoken = getCookie('csrftoken');
+
+            fetch('/votes/comments/' + commentId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const pointsElement = document.getElementById(`comment-points-${commentId}`);
+                const pointsStringElement = document.getElementById(`comment-points-string-${commentId}`);
+
+                if (data.status === 'upvoted') {
+                    this.querySelector('svg').style.fill = '#FFA500'; // change SVG fill to orange
+
+                    // Get the current number of points and increment it
+                    let newPoints = parseInt(pointsElement.textContent) + 1;
+
+                    // Update the text content of the points element
+                    pointsElement.textContent = `${newPoints}`;
+                    pointsStringElement.textContent = `point${newPoints === 1 ? '' : 's'}`;
+
+                } else if (data.status === 'unvoted') {
+                    this.querySelector('svg').style.fill = 'black'; // change SVG fill to default
+
+                    // Get the current number of points and decrement it
+                    let newPoints = parseInt(pointsElement.textContent) - 1;
+
+                    // Update the text content of the points element
+                    pointsElement.textContent = `${newPoints}`;
+                    pointsStringElement.textContent = `point${newPoints === 1 ? '' : 's'}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+});
+</script>

@@ -1,0 +1,20 @@
+{% extends "base/base.html" %}
+{% load custom_filters %}
+
+{% block title %}Edit comment | Share AI Chat{% endblock %}
+
+{% block content %}
+  <h2>Edit comment</h2>
+  <form method="post" action="{% url 'edit_comment' comment.id %}" id="edit-comment-form">
+    {% csrf_token %}
+    <div class="mb-3">
+      {{ form.content|addclass_to_input:"form-control"|add_autofocus }}
+      {% if form.content.errors %}
+        <div class="alert alert-danger">
+          {{ form.content.errors }}
+        </div>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">Update Comment</button>
+  </form>
+{% endblock %}

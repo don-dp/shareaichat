@@ -1,10 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.core.paginator import Paginator
-from .models import Post, PostVote
+from .models import Post, PostVote, Comment, CommentVote
 from django.utils import timezone
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from collections import defaultdict
+from django.db.models import Count
+from .forms import CommentForm
+from django.contrib import messages
 
 class HomePage(View):
     def get(self, request):
@@ -24,7 +28,7 @@ class HomePage(View):
         page_size = 10
 
         if sort_by == 'new':
-            posts = Post.objects.all().order_by('-created_at')
+            posts = Post.objects.all().order_by('-created_at').annotate(comment_count=Count('comment'))
         else:
             if time == '1_day':
                 date_limit = timezone.now() - timezone.timedelta(days=1)
@@ -36,9 +40,9 @@ class HomePage(View):
                 date_limit = None
 
             if date_limit:
-                posts = Post.objects.filter(created_at__gte=date_limit)
+                posts = Post.objects.filter(created_at__gte=date_limit).annotate(comment_count=Count('comment'))
             else:
-                posts = Post.objects.all()
+                posts = Post.objects.all().annotate(comment_count=Count('comment'))
 
             posts = posts.order_by('-votes')
 
@@ -82,16 +86,41 @@ class VotePostView(View):
 class PostDetailView(View):
     def get(self, request, post_id):
         post = get_object_or_404(Post, id=post_id)
-        
+        comment_count = Comment.objects.filter(post=post).count()
+
+        comments = Comment.objects.filter(post=post).order_by('-votes', 'created_at')
+
+        root_comments = []
+        child_comments = defaultdict(list)
+        for comment in comments:
+            if comment.is_root_comment():
+                root_comments.append(comment)
+            else:
+                child_comments[comment.parent_id].append(comment)
+
+        # Sort root comments by votes
+        root_comments.sort(key=lambda x: x.votes, reverse=True)
+
+        for comment in root_comments:
+            comment.replies = sorted(child_comments[comment.id], key=lambda x: x.created_at)
+
         if request.user.is_authenticated:
-            postvotes = PostVote.objects.filter(user=request.user, post=post)
-            is_upvoted = postvotes.exists()
+            postvote = PostVote.objects.filter(user=request.user, post=post)
+            is_upvoted = postvote.exists()
+
+            commentvotes = CommentVote.objects.filter(user=request.user, comment__in=comments)
+            upvoted_comment_ids = commentvotes.values_list('comment', flat=True)
         else:
             is_upvoted = False
-        
+            upvoted_comment_ids = []
+
         context = {
             'post': post,
             'is_upvoted': is_upvoted,
+            'root_comments': root_comments,
+            'upvoted_comment_ids' : upvoted_comment_ids,
+            'comment_count' : comment_count,
+            'form' : CommentForm(),
         }
 
         return render(request, 'main/post_detail.html', context)
@@ -104,9 +133,107 @@ class MyPostsView(LoginRequiredMixin, View):
         except ValueError:
             page_number = 1
 
-        my_posts_list = Post.objects.filter(user=request.user).order_by('-created_at')
+        my_posts_list = Post.objects.filter(user=request.user).annotate(comment_count=Count('comment')).order_by('-created_at')
         
         paginator = Paginator(my_posts_list, 10)
         my_posts = paginator.get_page(page_number)
 
         return render(request, 'main/myposts.html', {'my_posts': my_posts})
+
+class MyCommentsView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        page_number = request.GET.get('page', 1)
+        try:
+            page_number = int(page_number)
+        except ValueError:
+            page_number = 1
+
+        my_comments_list = Comment.objects.filter(user=request.user).select_related('post').order_by('-created_at')
+
+
+        paginator = Paginator(my_comments_list, 10)
+        my_comments = paginator.get_page(page_number)
+
+        return render(request, 'main/mycomments.html', {'my_comments': my_comments})
+
+class VoteCommentView(View):
+    def post(self, request, comment_id):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'You must be logged in to upvote.'})
+
+        try:
+            comment = Comment.objects.get(pk=comment_id)
+        except Comment.DoesNotExist:
+            return JsonResponse({'error': 'Invalid comment id'}, status=400)
+        
+        user = request.user
+
+        vote, created = CommentVote.objects.get_or_create(user=user, comment=comment)
+
+        if created:
+            comment.votes += 1
+            comment.save()
+            return JsonResponse({'status': 'upvoted', 'comment_id': comment_id})
+
+        else:
+            vote.delete()
+            comment.votes -= 1
+            comment.save()
+            return JsonResponse({'status': 'unvoted', 'comment_id': comment_id})
+
+class AddCommentView(LoginRequiredMixin, View):
+    def post(self, request, post_id):
+        form = CommentForm(request.POST)
+        parent_id = request.GET.get('parent_id', None)
+
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.user = request.user
+            comment.post = get_object_or_404(Post, id=post_id)
+            if parent_id is not None:
+                parent_comment = get_object_or_404(Comment, id=parent_id)
+                if parent_comment.post.id != comment.post.id:
+                    messages.error(request, "Parent comment does not belong to the current post.")
+                    return redirect('post_detail', post_id=post_id)
+                
+                comment.parent = parent_comment
+            comment.save()
+            CommentVote.objects.create(user=request.user, comment=comment)
+            messages.success(request, "Your comment has been added successfully.")
+            return redirect('post_detail', post_id=post_id)
+        
+        messages.error(request, "There was an error adding your comment. Please try again.")
+        return redirect('post_detail', post_id=post_id)
+
+class ReplyCommentView(LoginRequiredMixin, View):
+    def get(self, request, comment_id):
+        initial_text = request.GET.get('initial_text', '')
+        comment = get_object_or_404(Comment, id=comment_id)
+        if comment.is_root_comment():
+            form = CommentForm(initial={'content': initial_text})
+            return render(request, 'main/reply_comment.html', {'form': form, 'comment': comment})
+        else:
+            messages.error(request, 'You can only reply to root comments.')
+            return redirect('post_detail', post_id=comment.post.id)
+
+class EditCommentView(LoginRequiredMixin, View):
+    def get(self, request, comment_id):
+        comment = get_object_or_404(Comment, id=comment_id)
+        if comment.user == request.user:
+            form = CommentForm(instance=comment)
+            return render(request, 'main/edit_comment.html', {'form': form, 'comment': comment})
+        else:
+            messages.error(request, 'You can only edit your own comments.')
+            return redirect('post_detail', post_id=comment.post.id)
+
+    def post(self, request, comment_id):
+        comment = get_object_or_404(Comment, id=comment_id)
+        if comment.user == request.user:
+            form = CommentForm(request.POST, instance=comment)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Your comment has been updated successfully.")
+                return redirect('post_detail', post_id=comment.post.id)
+        else:
+            messages.error(request, 'You can only edit your own comments.')
+            return redirect('post_detail', post_id=comment.post.id)

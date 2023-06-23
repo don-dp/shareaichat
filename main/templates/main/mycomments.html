@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+
+{% block title %}My Comments | Share AI Chat{% endblock %}
+
+{% block content %}
+<p><b>My Comments</b></p>
+
+{% for comment in my_comments %}
+    <div class="comment">
+        <p>{{ comment.content }}</p>
+        <p>
+            <span id="comment-points-{{ comment.id }}">{{ comment.votes }}</span> 
+            <span id="comment-points-string-{{ comment.id }}">point{{ comment.votes|pluralize }}</span> 
+            by {{ comment.user.username }} | Created at: {{ comment.created_at }}
+        </p>
+        <p>
+            Post: <a href="{% url 'post_detail' comment.post.id %}">{{ comment.post.title }}</a>
+        </p>
+        <hr>
+    </div>
+{% empty %}
+    <p>You have not made any comments yet.</p>
+{% endfor %}
+
+{% if my_comments %}
+<div style="text-align: center;">
+    {% if my_comments.has_previous %}
+        <a href="?page={{ my_comments.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    Page {{ my_comments.number }} of {{ my_comments.paginator.num_pages }}
+
+    {% if my_comments.has_next %}
+        <a href="?page={{ my_comments.next_page_number }}">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
