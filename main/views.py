@@ -67,8 +67,6 @@ class VotePostView(View):
         # Check if the user has voted more than 10 times in the last 10 minutes
         ten_minutes_ago = timezone.now() - timedelta(minutes=10)
         recent_votes = VoteTimestamp.objects.filter(user=request.user, timestamp__gte=ten_minutes_ago).count()
-        old_votes = VoteTimestamp.objects.filter(timestamp__lt=ten_minutes_ago)
-        old_votes.delete()
 
         if recent_votes > 10:
             return JsonResponse({'error': 'You have exceeded the vote limit.'}, status=429)
@@ -176,8 +174,6 @@ class VoteCommentView(View):
         # Check if the user has voted more than 10 times in the last 10 minutes
         ten_minutes_ago = timezone.now() - timedelta(minutes=10)
         recent_votes = VoteTimestamp.objects.filter(user=request.user, timestamp__gte=ten_minutes_ago).count()
-        old_votes = VoteTimestamp.objects.filter(timestamp__lt=ten_minutes_ago)
-        old_votes.delete()
 
         if recent_votes > 10:
             return JsonResponse({'error': 'You have exceeded the vote limit.'}, status=429)
