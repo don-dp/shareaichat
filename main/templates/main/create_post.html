@@ -1,0 +1,32 @@
+{% extends "base/base.html" %}
+{% load custom_filters %}
+
+{% block title %}Create a Post | Share AI Chat{% endblock %}
+
+{% block content %}
+<p><b>Create a new post</b></p>
+
+<form method="post" action="{% url 'createpost' %}" id="create-post-form">
+    {% csrf_token %}
+    <div class="mb-3">
+        <p><label for="{{ form.title.id_for_label }}">Title</label></p>
+        {{ form.title|addclass_to_input:"form-control"|add_autofocus }}
+        {% if form.title.errors %}
+            <div class="alert alert-danger">
+                {{ form.title.errors }}
+            </div>
+      {% endif %}
+    </div>
+    <div class="mb-3">
+        <p><label for="{{ form.content.id_for_label }}">Post</label></p>
+        {{ form.content|addclass_to_input:"form-control" }}
+        {% if form.content.errors %}
+        <div class="alert alert-danger">
+            {{ form.content.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{% endblock %}

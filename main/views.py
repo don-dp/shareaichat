@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from collections import defaultdict
 from django.db.models import Count
-from .forms import CommentForm
+from .forms import CommentForm, PostForm
 from django.contrib import messages
 
 class HomePage(View):
@@ -237,3 +237,21 @@ class EditCommentView(LoginRequiredMixin, View):
         else:
             messages.error(request, 'You can only edit your own comments.')
             return redirect('post_detail', post_id=comment.post.id)
+
+class CreatePostView(LoginRequiredMixin, View):
+    def get(self, request):
+        form = PostForm()
+        return render(request, 'main/create_post.html', {'form': form})
+
+    def post(self, request):
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
+            PostVote.objects.create(user=request.user, post=post)
+            messages.success(request, "Your post has been created successfully.")
+            return redirect('post_detail', post_id=post.id)
+        else:
+            messages.error(request, 'There was an error creating your post.')
+            return redirect('createpost')
