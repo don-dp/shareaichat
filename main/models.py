@@ -49,3 +49,10 @@ class CommentVote(models.Model):
 
     def __str__(self):
         return f'{self.user.username} upvoted a comment on {self.comment.post.title}'
+
+class VoteTimestamp(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} voted at {self.timestamp}'

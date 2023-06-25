@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, PostVote, Comment, CommentVote
+from .models import Post, PostVote, Comment, CommentVote, VoteTimestamp
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -74,3 +74,9 @@ class CommentVoteAdmin(admin.ModelAdmin):
         return queryset
 
 admin.site.register(CommentVote, CommentVoteAdmin)
+
+class VoteTimestampAdmin(admin.ModelAdmin):
+    list_display = ('user', 'timestamp')
+    search_fields = ('user__username',)
+
+admin.site.register(VoteTimestamp, VoteTimestampAdmin)

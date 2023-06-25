@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.core.paginator import Paginator
-from .models import Post, PostVote, Comment, CommentVote
+from .models import Post, PostVote, Comment, CommentVote, VoteTimestamp
 from django.utils import timezone
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -9,6 +9,7 @@ from collections import defaultdict
 from django.db.models import Count
 from .forms import CommentForm, PostForm
 from django.contrib import messages
+from datetime import timedelta
 
 class HomePage(View):
     def get(self, request):
@@ -61,7 +62,16 @@ class HomePage(View):
 class VotePostView(View):
     def post(self, request, post_id):
         if not request.user.is_authenticated:
-            return JsonResponse({'error': 'You must be logged in to upvote.'})
+            return JsonResponse({'error': 'You must be logged in to upvote.'}, status=401)
+        
+        # Check if the user has voted more than 10 times in the last 10 minutes
+        ten_minutes_ago = timezone.now() - timedelta(minutes=10)
+        recent_votes = VoteTimestamp.objects.filter(user=request.user, timestamp__gte=ten_minutes_ago).count()
+        old_votes = VoteTimestamp.objects.filter(timestamp__lt=ten_minutes_ago)
+        old_votes.delete()
+
+        if recent_votes > 10:
+            return JsonResponse({'error': 'You have exceeded the vote limit.'}, status=429)
 
         try:
             post = Post.objects.get(pk=post_id)
@@ -71,6 +81,8 @@ class VotePostView(View):
         user = request.user
 
         vote, created = PostVote.objects.get_or_create(user=user, post=post)
+
+        VoteTimestamp.objects.create(user=request.user)
 
         if created:
             post.votes += 1
@@ -159,7 +171,16 @@ class MyCommentsView(LoginRequiredMixin, View):
 class VoteCommentView(View):
     def post(self, request, comment_id):
         if not request.user.is_authenticated:
-            return JsonResponse({'error': 'You must be logged in to upvote.'})
+            return JsonResponse({'error': 'You must be logged in to upvote.'}, status=401)
+
+        # Check if the user has voted more than 10 times in the last 10 minutes
+        ten_minutes_ago = timezone.now() - timedelta(minutes=10)
+        recent_votes = VoteTimestamp.objects.filter(user=request.user, timestamp__gte=ten_minutes_ago).count()
+        old_votes = VoteTimestamp.objects.filter(timestamp__lt=ten_minutes_ago)
+        old_votes.delete()
+
+        if recent_votes > 10:
+            return JsonResponse({'error': 'You have exceeded the vote limit.'}, status=429)
 
         try:
             comment = Comment.objects.get(pk=comment_id)
@@ -169,6 +190,8 @@ class VoteCommentView(View):
         user = request.user
 
         vote, created = CommentVote.objects.get_or_create(user=user, comment=comment)
+
+        VoteTimestamp.objects.create(user=request.user)
 
         if created:
             comment.votes += 1
