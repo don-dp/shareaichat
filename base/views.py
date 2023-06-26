@@ -2,6 +2,7 @@ from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -66,9 +67,12 @@ class ProfileView(LoginRequiredMixin, View):
         form = EmailUpdateForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data.get('email')
-            request.user.email = email
-            request.user.save()
-            messages.success(request, 'Email updated successfully')
+            if email and User.objects.filter(email=email).exclude(username=request.user.username).exists():
+                messages.error(request, 'This email is already in use. Please use a different email. If someone else added your email id to their account, please email hello@mydomain.com')
+            else:
+                request.user.email = email
+                request.user.save()
+                messages.success(request, 'Email updated successfully')
         else:
             messages.error(request, 'Invalid email')
         return redirect('profile')
