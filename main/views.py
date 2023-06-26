@@ -123,6 +123,8 @@ class PostDetailView(View):
         else:
             is_upvoted = False
             upvoted_comment_ids = []
+        
+        can_delete = request.user == post.user and timezone.now() - post.created_at < timedelta(hours=1)
 
         context = {
             'post': post,
@@ -131,6 +133,7 @@ class PostDetailView(View):
             'upvoted_comment_ids' : upvoted_comment_ids,
             'comment_count' : comment_count,
             'form' : CommentForm(),
+            'can_delete': can_delete
         }
 
         return render(request, 'main/post_detail.html', context)
@@ -274,3 +277,28 @@ class CreatePostView(LoginRequiredMixin, View):
         else:
             messages.error(request, 'There was an error creating your post.')
             return redirect('createpost')
+        
+class PostDeleteView(LoginRequiredMixin, View):
+    def get(self, request, post_id):
+        post = get_object_or_404(Post, id=post_id)
+        if post.user != request.user:
+            messages.error(request, 'You can only delete your own posts.')
+            return redirect('post_detail', post_id=post.id)
+        elif timezone.now() - post.created_at > timedelta(hours=1):
+            messages.error(request, 'You can only delete posts that were created within the last hour.')
+            return redirect('post_detail', post_id=post.id)
+        else:
+            return render(request, 'main/post_delete_confirm.html', {'post': post})
+
+    def post(self, request, post_id):
+        post = get_object_or_404(Post, id=post_id)
+        if post.user != request.user:
+            messages.error(request, 'You can only delete your own posts.')
+            return redirect('post_detail', post_id=post.id)
+        elif timezone.now() - post.created_at > timedelta(hours=1):
+            messages.error(request, 'You can only delete posts that were created within the last hour.')
+            return redirect('post_detail', post_id=post.id)
+        else:
+            post.delete()
+            messages.success(request, "Your post has been deleted successfully.")
+            return redirect('homepage')

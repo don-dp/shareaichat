@@ -17,6 +17,9 @@
     <span id="points-{{ post.id }}">{{ post.votes }}</span>
     <span id="points-string-{{ post.id }}">point{{ post.votes|pluralize }}</span>
     by {{ post.user.username }} | {{ comment_count }} comment{{ comment_count|pluralize }} | Created at: {{ post.created_at }}
+    {% if can_delete %}
+    | <a href="{% url 'post_delete' post.id %}">Delete Post</a>
+    {% endif %}
 </p>
 <hr>
 <div>{{ post.content|linebreaks }}</div>
