@@ -79,7 +79,7 @@
                 </p>
                 <div>{{ reply.content|linebreaks }}</div>
                 <p>
-                    <a href="{% url 'reply_comment' comment.id %}?initial_text=@{{ reply.user.username }}">Reply</a>
+                    <a href="{% url 'reply_comment' comment.id %}?initial_text=@{{ reply.user.username }}%20">Reply</a>
                     {% if request.user == reply.user %}
                         | <a href="{% url 'edit_comment' reply.id %}">Edit</a>
                     {% endif %}
