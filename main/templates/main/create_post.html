@@ -27,25 +27,38 @@
         </div>
         {% endif %}
     </div>
+    <div class="mb-3">
+        <p><label for="{{ form.extra_info.id_for_label }}">Additional Info</label></p>
+        {{ form.extra_info|addclass_to_input:"form-control" }}
+        {% if form.extra_info.errors %}
+        <div class="alert alert-danger">
+            {{ form.extra_info.errors }}
+        </div>
+        {% endif %}
+    </div>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
-
-<br>
-<p>To learn more about how this website works, please check the <a href="{% url 'aboutpage' %}">about page</a>.</p>
-
 <script>
     window.onload = function () {
         var title = localStorage.getItem('title');
         var content = localStorage.getItem('content');
-        var messageElement = document.getElementById('js-message');
+        var extraInfo = localStorage.getItem('extra_info');
 
-        if (title && content) {
+        if (title) {
             document.getElementById('id_title').value = title;
+        }
+        if (content) {
             document.getElementById('id_content').value = content;
         }
+        if (extraInfo) {
+            document.getElementById('id_extra_info').value = extraInfo;
+        }
+
         localStorage.removeItem('title');
         localStorage.removeItem('content');
+        localStorage.removeItem('extra_info');
     }
+
 </script>
 
 {% endblock %}

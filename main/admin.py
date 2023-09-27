@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 
 class PostAdminForm(forms.ModelForm):
     content = forms.CharField(widget=forms.Textarea)
+    extra_info = forms.CharField(widget=forms.Textarea)
 
     class Meta:
         model = Post

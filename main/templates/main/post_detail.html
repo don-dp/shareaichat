@@ -24,6 +24,13 @@
 <hr>
 <div>{{ post.content|linebreaks }}</div>
 <hr>
+{% if post.extra_info %}
+    <div>
+        <strong>Extra Info:</strong>
+        <p>{{ post.extra_info|linebreaks }}</p>
+    </div>
+    <hr>
+{% endif %}
 <p>Add comment</p>
 <form method="post" action="{% url 'add_comment' post.id %}" id="add-comment-form">
     {% csrf_token %}
