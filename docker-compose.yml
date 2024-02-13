@@ -37,19 +37,22 @@ services:
       - db
     restart: always
   
-  nginx:
-    image: nginx:1.25
+  caddy:
+    image: caddy:2
     restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./${SHAREAICHAT_NGINX_CONFIG}:/etc/nginx/conf.d/default.conf
-      - static_volume:/static:ro
-      - /home/sammy/certs:/etc/nginx/certs:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - static_volume:/static
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - web
 
 volumes:
   db_data:
   static_volume:
+  caddy_data:
+  caddy_config:
